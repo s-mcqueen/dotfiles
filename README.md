@@ -1,4 +1,4 @@
-vimrc
+dotfiles
 =====
 
 My .vimrc file
