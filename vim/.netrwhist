@@ -1,4 +1,9 @@
 let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =2
+let g:netrw_dirhist_cnt =7
 let g:netrw_dirhist_1='/Users/McQueen/.vim/bundle/vim-markmultiple/plugin'
 let g:netrw_dirhist_2='/Users/McQueen/.vim'
+let g:netrw_dirhist_3='/Users/McQueen/Dropbox/Hacks/aprilFools.css'
+let g:netrw_dirhist_4='/Users/McQueen/Dropbox/School/BY_YEAR/4-Senior_Year/Senior_Spring/AI/Final Project/Box2D-2.3b0/Box2D'
+let g:netrw_dirhist_5='/Users/McQueen/Dropbox/Hacks/DL-text/.git'
+let g:netrw_dirhist_6='/Users/McQueen/Dropbox/School/BY_YEAR/4-Senior_Year/Senior_Spring/AI/Final Project/genetic-buildings/.git'
+let g:netrw_dirhist_7='/usr/local/include/server'
