@@ -18,7 +18,6 @@ alias focus="cd; sudo vim /etc/hosts;"
 alias goog="ping www.google.com"
 alias nodetable="/Applications/LightTable.app/Contents/MacOS/node-webkit"
 
-
 alias sml="echo remember that sml acting like its in my path here is an alias hack...; /usr/local/smlnj-110.60/bin/sml"
 alias ls="ls -F"
 alias lsa="ls -a -F"
