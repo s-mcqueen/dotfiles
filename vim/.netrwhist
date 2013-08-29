@@ -1,11 +1,2 @@
 let g:netrw_dirhistmax  =10
-let g:netrw_dirhist_cnt =9
-let g:netrw_dirhist_1='/Users/McQueen/Dropbox/Hacks/seanmcqueen.me/views'
-let g:netrw_dirhist_2='/Users/McQueen/Dropbox/Hacks/seanmcqueen.me/routes'
-let g:netrw_dirhist_3='/Users/McQueen/Dropbox/Hacks/phonesmash/.git'
-let g:netrw_dirhist_4='/Users/McQueen/Dropbox/Hacks/phonesmash/node_modules/grunt'
-let g:netrw_dirhist_5='/Users/McQueen/.pip'
-let g:netrw_dirhist_6='/Users/McQueen/.ssh'
-let g:netrw_dirhist_7='/Users/McQueen/.dropbox'
-let g:netrw_dirhist_8='/Users/McQueen/desktop'
-let g:netrw_dirhist_9='/Users/McQueen/.vim'
+let g:netrw_dirhist_cnt =0
