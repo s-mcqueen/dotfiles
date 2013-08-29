@@ -1,6 +1,15 @@
 export CLICOLOR=1          
 export LSCOLORS=GxFxCxDxBxegedabagaced
 
+## AWS
+export JAVA_HOME='/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home'
+export EC2_HOME='/Users/McQueen/Dropbox/Hacks/ec2-api-tools-1.6.7.4'
+export PATH=$PATH:$EC2_HOME/bin 
+export AWS_ACCESS_KEY='AKIAJVYM6ZYMNRCFOIQQ'
+export AWS_SECRET_KEY='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'
+
+alias aws_ssh='ssh -i /Users/McQueen/Dropbox/Hacks/aws_kp.pem'
+
 alias bp="vim ~/.bash_profile"
 alias pp="subl /etc/profile"
 alias vp="vim ~/.vimrc"
@@ -19,49 +28,64 @@ alias goog="ping www.google.com"
 alias nodetable="/Applications/LightTable.app/Contents/MacOS/node-webkit"
 
 alias sml="echo remember that sml acting like its in my path here is an alias hack...; /usr/local/smlnj-110.60/bin/sml"
-alias ls="ls -F"
-alias lsa="ls -a -F"
-alias lsl="ls -l -a -F"
+alias l="ls -F"
+alias ll="ls -l -a -F"
 alias path="echo $PATH"
-
 
 alias knuth="ssh smcqueen@knuth.cs.hmc.edu"
 alias wilkes="ssh smcqueen@wilkes.cs.hmc.edu"
 
-function git-branch-name {
-    echo $(git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'})
-    }
-function git-dirty {
-    st=$(git status 2>/dev/null | tail -n 1)
-    if [[ $st != "nothing to commit (working directory clean)" ]]
-    then
-        echo "*"
-    fi
-    }
-function git-unpushed {
-    brinfo=$(git branch -v | grep $(git-branch-name))
-    if [[ $brinfo =~ ("[ahead "([[:digit:]]*)) ]]
-    then
-        echo "[${BASH_REMATCH[2]}]"
-    fi
-    }
+note(){
+    /Users/McQueen/Dropbox/Hacks/note_create.sh $1
+}
 
-function gitify {
-    status=$(git status 2>/dev/null | tail -n 1)
-    if [[ $status == "" ]]
-    then
-        echo ""
-    else
-        echo "($(git-branch-name))$(git-dirty)$(git-unpushed)"
-    fi
-    }
+edit(){
+    /Users/McQueen/Dropbox/Hacks/note_edit.sh $1
+}
+
+# function git-branch-name {
+#     echo $(git symbolic-ref HEAD 2>/dev/null | awk -F/ {'print $NF'})
+#     }
+# function git-dirty {
+#     st=$(git status 2>/dev/null | tail -n 1)
+#     if [[ $st != "nothing to commit (working directory clean)" ]]
+#     then
+#         echo "*"
+#     fi
+#     }
+# function git-unpushed {
+#     brinfo=$(git branch -v | grep $(git-branch-name))
+#     if [[ $brinfo =~ ("[ahead "([[:digit:]]*)) ]]
+#     then
+#         echo "[${BASH_REMATCH[2]}]"
+#     fi
+#     }
+
+# function gitify {
+#     status=$(git status 2>/dev/null | tail -n 1)
+#     if [[ $status == "" ]]
+#     then
+#         echo ""
+#     else
+#         echo "($(git-branch-name))$(git-dirty)$(git-unpushed)"
+#     fi
+#     }
     
-PS1="\$(gitify)\$ "
+# PS1="\$(gitify)\$ "
+
+function parse_git_branch { 
+   git branch --no-color 2> /dev/null | sed -e '/^[^*]/d' -e 's/* \(.*\)/(\1)/' 
+   } 
+export PS1=":{\@} \W\$(parse_git_branch)$ "
+
 
 # Setting PATH for Python 2.7
 # The original version is saved in .bash_profile.pysave
 PATH="/Library/Frameworks/Python.framework/Versions/2.7/bin:${PATH}"
-export PATH
 
-PATH=$PATH:.
-export PATH
+# add play to path
+export PATH=$PATH:"/usr/local/share/play-2.1.2"
+
+
+export GOROOT=/usr/local/go
+export PATH=$PATH:$GOROOT/bin
