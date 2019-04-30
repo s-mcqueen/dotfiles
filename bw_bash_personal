@@ -1,0 +1,283 @@
+# Shared history between terms
+# http://unix.stackexchange.com/questions/18212/bash-history-ignoredups-and-erasedups-setting-conflict-with-common-history
+#HISTCONTROL=ignoredups:erasedups
+#shopt -s histappend
+#PROMPT_COMMAND="history -n; history -w; history -c; history -r; $PROMPT_COMMAND"
+
+# For Beeswax ./setup.sh
+export BIO_ROOT=~/src/beeswaxio
+export BUZZ_ROOT="${BIO_ROOT}"/beeswax/buzz_api
+export BUZZ_UI_ROOT=~/src/buzz-ui
+# For Beeswax Hive deployment tool, add to path
+export PATH=$PATH:$BIO_ROOT/bazel-bin/beeswax/prod/hive:$BIO_ROOT/bazel-bin/beeswax/buzz
+# for GO
+export PATH="$PATH":/usr/local/go/bin
+export GOPATH=~/go/
+# adding `go` packages to PATH
+export PATH="${PATH}:${GOPATH}bin"
+
+# For Hive autocomplete
+eval "$(register-python-argcomplete hive)"
+# For Bazel autocomplete
+source /usr/local/lib/bazel/bin/bazel-complete.bash
+# For Honeypot release to work correctly, depends on PYTHONPATH
+export PYTHONPATH="$PYTHONPATH:$BIO_ROOT/google/protobuf/python:$BIO_ROOT/bazel-genfiles:$BIO_ROOT"
+
+export JAVA_HOME="/usr/lib/jvm/java-8-openjdk-amd64"
+
+# managing this file
+alias bp="vim ~/.bash_personal"
+alias cp_bp="cp ~/.bash_personal ~/src/beeswaxio/beeswax/people/sean/bash_personal"  # copy this file to beeswax for safe keeping
+alias v="vim"
+alias sss="source ~/.bashrc"
+
+# moving around directories and simple stuff
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias c="clear"
+alias l="ls -F"
+alias ll="ls -l -a -F"
+alias ks="ls"
+alias synctime="sudo ntpdate -s time.nist.gov"
+
+# git stuff
+alias dif="git diff HEAD"
+alias master="git checkout master; git pull"
+alias gg="git grep"
+alias rmg="rm /home/sean/src/beeswaxio/.git/index.lock"
+
+function naw {
+    git reset HEAD $1
+    git checkout -- $1
+}
+
+# git stash stuff
+function push {
+    git add .
+    git stash save $1
+}
+
+function list {
+    git stash list
+}
+
+function show {
+    git stash show -p stash@{$1}
+}
+
+function pop {
+    git stash apply stash@{$1}
+}
+
+alias jj="push 'temp'"
+alias kk="pop 0"
+
+# mark directorys and sym-link for quick jumping
+export MARKPATH=$HOME/.marks
+function j { 
+    cd -P "$MARKPATH/$1" 2>/dev/null || echo "No such mark: $1"
+}
+function mark { 
+    mkdir -p "$MARKPATH"; ln -s "$(pwd)" "$MARKPATH/$1"
+}
+function unmark { 
+    rm -i "$MARKPATH/$1"
+}
+function marks {
+    ls -l "$MARKPATH" | sed 's/  / /g' | cut -d' ' -f9- | sed 's/ -/\-/g' && echo
+}
+
+# beeswax specific helpers
+function slacknotif {
+    bazel run //beeswax/base:slack_cli -- --channel @sean --message $1
+}
+
+function finish {
+    slacknotif ":heavy_check_mark:"
+}
+
+function markbot {
+    bazel run //beeswax/base:slack_cli -- --channel random --author MARKBOT --message "$1"
+}
+
+function monobuzz {
+    bazel run //beeswax/base:slack_cli -- --channel buzz-development --author MONOBUZZ --message "SOON"
+}
+
+function travisbot {
+    bazel run //beeswax/base:slack_cli -- --channel random --author TRAVISBOT --message "$1"
+}
+
+function ronbot {
+    bazel run //beeswax/base:slack_cli -- --channel random --author RONBOT --message "$1"
+}
+
+
+function seanbot {
+    bazel run //beeswax/base:slack_cli -- --channel random --author SEANBOT --message "$1"
+}
+
+function gateway {
+    # jump to the gateway
+    ssh-add ~/.aws/bee-prod-ssh-key-pair.pem
+    ssh sean@us-east-1a.prod.beeswax.com
+}
+
+function copy {
+    # Send a given file to gateway under the "sean" user in directory "~/sean"
+    ./beeswax/people/sean/scp_to_gateway.sh "$1"
+}
+
+function find_upload {
+    # for finding segment uploads
+    python ~/src/beeswaxio/beeswax/people/sean/find_segment_upload.py "$1" "$2"
+}
+
+function deploy_ticks {
+    cd ~/src/beeswaxio
+    git status
+    ./beeswax/people/sean/deploy_ticks.sh "${1}"
+}
+
+function deploy_pollinator {
+    # $1 is a message for hive deploy
+    cd ~/src/beeswaxio    
+    git status
+    ./beeswax/people/sean/deploy_pollinator.sh "$1"
+}
+
+function deploy_pollen_count {
+    # $1 is a message for hive deploy
+    cd ~/src/beeswaxio
+    git status
+    ./beeswax/people/sean/deploy_pollen_count.sh "$1"
+}
+
+function deploy_migrate_canary {
+     # $1 is the message
+     cd ~/src/beeswaxio
+     git status
+     ./beeswax/people/sean/deploy_migrate_canary.sh "$1"
+}
+
+function deploy_migrate_devsean {
+     # $1 is the message
+     cd ~/src/beeswaxio
+     git status
+     ./beeswax/people/sean/deploy_migrate_devsean.sh "$1"
+}
+
+function deploy_buzz_qa {
+    # $1 is the branch to deploy
+    cd ~/src/beeswaxio 
+    git status
+    ./beeswax/people/sean/deploy_buzz_qa.sh 
+}
+
+function deploy_buzz_devsean {
+    cd ~/src/beeswaxio
+    git status
+    ./beeswax/people/sean/deploy_buzz_devsean.sh
+}
+
+function deploy_buzz_canary {
+    # $1 is the tag to deploy
+    cd ~/src/beeswaxio
+    git status
+    ./beeswax/people/sean/deploy_buzz_canary.sh
+}
+
+function deploy_buzz_fes_qa {
+    # $1 is the branch to deploy
+    cd ~/src/beeswaxio
+    git status
+    ./beeswax/people/sean/deploy_buzz_fes_qa.sh
+}
+
+function deploy_buzz_fes {
+    cd ~/src/beeswaxio
+    git status
+    ./beeswax/people/sean/deploy_buzz_fes.sh "$1"
+}
+
+function deploy_buzz {
+    cd ~/src/beeswaxio
+    git status
+    ./beeswax/people/sean/deploy_buzz.sh "$1"
+}
+
+function deploy_buzz_ui {
+    cd ~/src/beeswaxio
+    git status
+    ./beeswax/people/sean/deploy_buzz_ui.sh "$1"
+}
+
+function delete_branches {
+    git checkout master
+    git fetch -p
+    git branch -r | awk '{print $1}' | cut -c 8- | egrep -v -f /dev/fd/0 <(git branch | awk '{print $1}' | grep -v '\*') | xargs git branch -D
+}
+
+function copy_tools_locally {
+    cd ~/src/beeswaxio
+    bazel build //beeswax/tools/...
+    # segment counts tool
+    sudo cp bazel-bin/beeswax/tools/segment_counts /usr/local/bin/
+    sudo cp -r bazel-bin/beeswax/tools/segment_counts.runfiles /usr/local/bin/
+    sudo cp bazel-bin/beeswax/tools/budget_tool /usr/local/bin/
+    sudo cp -r bazel-bin/beeswax/tools/budget_tool.runfiles /usr/local/bin/
+}
+
+function ts {
+    ./beeswax/people/sean/unix_time_converter.py "$1"
+}
+
+function tm {
+    tmux attach -t 0
+}
+
+function upgrade_pkgs {
+    sudo pip install -U -r $BIO_ROOT/beeswax/setup/python/requirements-prod.txt
+    sudo pip install -U -r $BIO_ROOT/beeswax/setup/python/requirements-dev.txt
+}
+
+function ticks {
+    bazel run //beeswax/monitoring/kapacitor/alerts/tick_builder:tick_builder
+}
+
+function cbf {
+    $BUZZ_ROOT/buzz/vendor/bin/phpcbf --standard=$BIO_ROOT/phpcs.xml $1
+}
+
+function use_app {
+    bazel run //beeswax/buzz_api/dev:use_app -- $1
+}
+
+function run_tests {
+    bazel run //beeswax/buzz_api/test:run_tests -- $1
+}
+
+function dump_schema {
+    bazel run //beeswax/buzz_api/migrate:dev_migrate -- --app buzz --database buzz_schema_db --drop-database --use-default-datetime
+    bazel run //beeswax/buzz_api/migrate:mysqldump -- --database buzz_schema_db --app buzz
+}
+
+function dump_schema_fes {
+    bazel run //beeswax/buzz_api/migrate:dev_migrate -- --app fes --database fes_schema_db --drop-database --use-default-datetime
+    bazel run //beeswax/buzz_api/migrate:mysqldump -- --database fes_schema_db --app fes
+}
+
+function docker-clean {
+    sudo docker rm -vf $(docker ps -aq)
+    sudo docker rmi -f $(docker images -aq)
+    sudo docker volume prune -f
+}
+
+alias bee-ssh-add='eval `ssh-agent -s` && ssh-add ~/.aws/bee-prod-ssh-key-pair.pem'
+
+# use keychain to manage ssh-agent and ssh-add, to avoid typing passwords
+# http://unix.stackexchange.com/questions/90853/how-can-i-run-ssh-add-automatically-without-password-prompt
+eval `keychain --eval id_rsa`
+
+bee-ssh-add
