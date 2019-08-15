@@ -1,0 +1,222 @@
+export VISUAL='/usr/bin/vim'
+export EDITOR="$VISUAL"
+
+# managing this file
+alias bp='vim ~/.local.bash'
+alias sss='source ~/.bash_profile'
+
+# basics, improving command line
+alias ..="cd .."
+alias ...="cd ../.."
+alias ....="cd ../../.."
+alias c="clear"
+alias l="ls -F"
+alias ll="ls -l -a -F"
+alias ks="ls"
+alias v="vim"
+
+# tmux 
+function tt {
+    tmux list-sessions
+    if [ $? -eq "0" ]; then
+        # always connect to session dev
+        tmux attach-session -t dev
+    else
+        tmux new -s dev
+    fi
+}
+
+# arc shortcuts
+alias bb="arc branch --by-status"
+
+function cc {
+    arc feature $USER/$1
+}
+
+function send {
+    git add --all
+    git commit -m "$1"
+    arc diff --draft --verbatim --browse 
+}
+
+function update {
+    if [[ -z "$1" ]]; then
+        message="update"
+    else
+        message="$1"
+    fi
+
+    git add --all
+    git commit --amend --no-edit
+    arc diff -m "$message" 
+}
+
+function ap {
+    arc paste --title "$1"
+}
+
+# git shortcuts
+alias master="git checkout master; git pull"
+alias dif="git diff HEAD"
+alias rbm="jj; git fetch origin; git rebase origin/master; kk"
+
+function gg {
+    git grep "$1"
+}
+
+function replace {
+    to_replace="$1"
+    with="$2"
+    git grep -l "$to_replace" | xargs sed -i '' -e "s/${to_replace}/${with}/g"
+}
+
+function ggp {
+    git grep "$1" -- '*.py'
+}
+
+function gls {
+    git ls-files | grep $1
+}
+
+function gb {
+  if [ "$#" -eq 0 ]; then
+    git for-each-ref --sort=-committerdate refs/heads/ \
+      --format="%(HEAD) %(color:yellow)%(refname:short)%(color:reset) - %(color:red)%(objectname:short)%(color:reset) - %(contents:subject) - %(authorname) (%(color:green)%(committerdate:relative)%(color:reset))" \
+      | fzf --ansi -n1 | perl -plane 's/(\s|\*)*(\S+).*/$2/' | xargs git checkout
+  else
+    git branch "$@"
+  fi
+}
+
+function naw {
+    git reset HEAD $1
+    git checkout -- $1
+}
+
+function delete_branches {
+    git checkout master
+    git fetch -p
+    git branch -r | awk '{print $1}' | cut -c 8- | egrep -v -f /dev/fd/0 <(git branch | awk '{print $1}' | grep -v '\*') | xargs git branch -D
+}
+
+# git stash shortcuts
+function push {
+    git add .
+    git stash save $1
+}
+
+function list {
+    git stash list
+}
+
+function show {
+    git stash show -p stash@{$1}
+}
+
+function pop {
+    git stash apply stash@{$1}
+}
+
+function delete_branches {
+    git checkout master
+    git fetch -p
+    git branch -r | awk '{print $1}' | cut -c 8- | egrep -v -f /dev/fd/0 <(git branch | awk '{print $1}' | grep -v '\*') | xargs git branch -D
+}
+
+alias jj="push 'temp'"
+alias kk="pop 0"
+
+# Twitter specific shortcuts
+alias tw="cd ~/workspace/twitter/source"
+alias nest="ssh nest.smfc.twitter.com"
+alias af="cd ~/workspace/github/airflow"
+
+pp() {
+    if [[ "$(pwd)" != "$HOME/workspace/twitter/source"* ]]; then
+        echo "Pants only works in source directories"
+    else
+        pushd . > /dev/null
+        cd $(git rev-parse --show-toplevel)
+        if [ -d ".pants.d" ]; then
+            ./pants "$@"
+        else 
+            echo "Pants only works in source directories, no pants folder found"
+        fi
+        popd > /dev/null
+    fi
+}
+
+# fzf stuff
+export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
+
+fh() {
+  eval $( ([ -n "$ZSH_NAME" ] && fc -l 1 || history) | fzf +s --tac | sed 's/ *[0-9]* *//')
+}
+
+hgr() {
+  CMD="history"
+  for word; do
+    CMD+=" | grep $word"
+  done
+
+  eval $CMD
+}
+
+ldap() {
+    if [ "$#" -ne 1 ]
+    then
+        echo "pass a ldap name"
+        return
+    fi
+    ldapsearch -xLLL -hldap.local.twitter.com -b cn=users,dc=ods,dc=twitter,dc=corp uid=$1
+}
+
+opdocs() {
+    tw; airflow/docs/scripts/update-operator-docs.sh
+}
+
+local_airflow() {
+    # requires the same version string in airflow/version.py and 3rdparty/python/BUILD
+    cd ~/workspace/twitter/airflow;
+    AIRFLOW_GPL_UNIDECODE=yes python2.7 setup.py bdist_wheel;
+
+    cd ~/workspace/twitter/source;
+    rm -rf ~/.pex ~/.cache/pants;
+    ./pants clean-all;
+    ./pants test airflow:: --python-repos-repos="['file:///Users/smcqueen/workspace/twitter/airflow/dist/', 'https://science-binaries.local.twitter.com/home/third_party/source/python/wheels/', 'https://science-binaries.local.twitter.com/home/third_party/source/python/bootstrap/','https://science-binaries.local.twitter.com/home/third_party/source/python/sources/']" --tag=py2
+
+}
+
+build_mlwf() {
+    pp binary airflow/src/python/twitter/airflow/cli
+}
+
+function blockers() {
+  blockers=$(echo '{
+    "constraints": {
+      "ids": [
+        '$1'
+      ]
+    },
+    "attachments": {
+      "reviewers": true
+    }
+  }' | arc call-conduit differential.revision.search | jq -rcM '.response.data[].attachments[].reviewers | map(select(.status == "blocking")) | [.[].reviewerPHID]')
+  
+  owners=$(echo '{"constraints": {"phids": '$blockers'}}' | arc call-conduit owners.search | jq -rcM '[.response.data[].fields.owners[].ownerPHID] | unique')
+
+  project_phids=$(echo "$owners" | jq -rcM '. | map(select(test("^PHID-PROJ")))')
+  user_phids=$(echo "$owners" | jq -rcM '. | map(select(test("^PHID-USER")))')
+
+  project_member_phids=$(echo '{"constraints": {"phids": '$project_phids'}, "attachments": {"members": true}}' | arc call-conduit project.search | jq -rcM '[.response.data[].attachments[].members[].phid]')
+
+  all_user_phids=$(echo "[$project_member_phids , $user_phids]" | jq -rcM 'flatten') 
+  users=$(echo '{"constraints": {"phids": '$all_user_phids'}}' | arc call-conduit user.search | jq -rcM '[.response.data[].fields.username] | sort | join(", ")')
+  echo $users;
+}
+
+# PyEnv
+export PATH="/Users/smcqueen/.pyenv/bin:$PATH"
+eval "$(pyenv init -)"
+eval "$(pyenv virtualenv-init -)"
+
