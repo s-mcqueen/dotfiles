@@ -5,6 +5,10 @@ export EDITOR="$VISUAL"
 alias bp='vim ~/.local.bash'
 alias sss='source ~/.bash_profile'
 
+function backup {
+    cp /Users/smcqueen/.local.bash /Users/smcqueen/workspace/github/dotfiles/tw_bash_profile
+}
+
 # basics, improving command line
 alias ..="cd .."
 alias ...="cd ../.."
@@ -58,7 +62,25 @@ function ap {
 # git shortcuts
 alias master="git checkout master; git pull"
 alias dif="git diff HEAD"
-alias rbm="jj; git fetch origin; git rebase origin/master; kk"
+
+# Rebase the current branch on origin/master. Safe with clean or dirty git state
+function rbm {
+    changes=0
+    if [ -n "$(git status --porcelain)" ]; then
+        changes=1
+    fi
+
+    if [ "$changes" -eq 1 ]; then
+        jj
+    fi
+
+    git fetch origin
+    git rebase origin/master
+
+    if [ "$changes" -eq 1 ]; then 
+        kk
+    fi
+}
 
 function gg {
     git grep "$1"
@@ -94,9 +116,10 @@ function naw {
 }
 
 function delete_branches {
-    git checkout master
-    git fetch -p
-    git branch -r | awk '{print $1}' | cut -c 8- | egrep -v -f /dev/fd/0 <(git branch | awk '{print $1}' | grep -v '\*') | xargs git branch -D
+    arc clean-branches
+    #git checkout master
+    #git fetch -p
+    #git branch -r | awk '{print $1}' | cut -c 8- | egrep -v -f /dev/fd/0 <(git branch | awk '{print $1}' | grep -v '\*') | xargs git branch -D
 }
 
 # git stash shortcuts
@@ -115,12 +138,6 @@ function show {
 
 function pop {
     git stash apply stash@{$1}
-}
-
-function delete_branches {
-    git checkout master
-    git fetch -p
-    git branch -r | awk '{print $1}' | cut -c 8- | egrep -v -f /dev/fd/0 <(git branch | awk '{print $1}' | grep -v '\*') | xargs git branch -D
 }
 
 alias jj="push 'temp'"
@@ -150,7 +167,9 @@ pp() {
 export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
 
 fh() {
-  eval $( ([ -n "$ZSH_NAME" ] && fc -l 1 || history) | fzf +s --tac | sed 's/ *[0-9]* *//')
+    cmd=$(history | fzf +s --tac | sed 's/ *[0-9]* *//')
+    history -s "$cmd"
+    eval "$cmd"
 }
 
 hgr() {
