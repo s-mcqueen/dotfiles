@@ -5,8 +5,6 @@ export LSCOLORS=GxFxCxDxBxegedabagaced
 export JAVA_HOME='/System/Library/Java/JavaVirtualMachines/1.6.0.jdk/Contents/Home'
 export EC2_HOME='/Users/McQueen/Dropbox/Hacks/ec2-api-tools-1.6.7.4'
 export PATH=$PATH:$EC2_HOME/bin 
-export AWS_ACCESS_KEY='AKIAJVYM6ZYMNRCFOIQQ'
-export AWS_SECRET_KEY='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'
 
 alias aws_ssh='ssh -i /Users/McQueen/Dropbox/Hacks/aws_kp.pem'
 
