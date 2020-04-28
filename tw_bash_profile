@@ -19,6 +19,10 @@ alias ll="ls -l -a -F"
 alias ks="ls"
 alias v="vim"
 
+alias py37='/opt/ee/python/3.7/bin/python3.7'
+alias py3='/opt/ee/python/3.6/bin/python3.6'
+alias py2='/opt/ee/python/2.7/bin/python2.7'
+
 # tmux 
 function tt {
     tmux list-sessions
@@ -38,6 +42,13 @@ function cc {
 }
 
 function send {
+    current=$(git branch | grep \* | cut -d ' ' -f2)
+    if [ "$current" == "master" ]; then
+        echo "On master, enter a different branch:"
+        read branch 
+        arc feature $USER/$branch
+    fi
+ 
     git add --all
     git commit -m "$1"
     arc diff --draft --verbatim --browse 
@@ -53,6 +64,17 @@ function update {
     git add --all
     git commit --amend --no-edit
     arc diff -m "$message" 
+}
+
+function url_apply {
+    if [ -z "$1" ] 
+        then
+        echo "You need to supply a URL to a patch file."
+        return
+    fi
+    URL=$1
+
+    curl $URL | git apply -v --index
 }
 
 function ap {
@@ -82,6 +104,12 @@ function rbm {
     fi
 }
 
+# rebase and update the current branch
+function rebase {
+    rbm
+    update
+}
+
 function gg {
     git grep "$1"
 }
@@ -93,11 +121,30 @@ function replace {
 }
 
 function ggp {
-    git grep "$1" -- '*.py'
+    git grep "$1" -- "*$2"
 }
 
 function gls {
     git ls-files | grep $1
+}
+
+function psg {
+    ps aux | grep -v grep | grep "$1"
+}
+
+function up {
+    PID=$(pgrep caffeinate)
+    if [ -z $PID ]; then
+        echo "COFFEE UP MATE!"
+        # Prevent sleeping for 8 hours
+        caffeinate -d -t 28800 &
+    else
+        echo "already caffeinated"
+    fi    
+}
+
+function down {
+    pkill caffeinate   
 }
 
 function gb {
@@ -145,8 +192,29 @@ alias kk="pop 0"
 
 # Twitter specific shortcuts
 alias tw="cd ~/workspace/twitter/source"
+alias air="cd ~/workspace/twitter/source/airflow/src/python/twitter/airflow"
 alias nest="ssh nest.smfc.twitter.com"
 alias af="cd ~/workspace/github/airflow"
+alias twml="tw; ./src/python/twitter/deepbird/tools/twml_cli"
+
+# CORTEX_AIRFLOW
+# mysql -uapp.cortex_airflow.0 -hdb-orion-rw-master-001.global-db.twttr.net -p
+# db-orion-rw-master-001.global-db.twttr.net
+# tss material dump cortex-airflow/db/prod/orion.txt
+
+ash() {
+    aurora task ssh "$1"
+}
+
+two_deps() {
+    target=$1
+    ./pants python-tiers "$target" | jq ".\"$target\".two_dependencies"
+}
+
+port() {
+    target=$1
+    ./python/scripts/python_auto_migrate_helper.sh "$target" --no-rebase
+}
 
 pp() {
     if [[ "$(pwd)" != "$HOME/workspace/twitter/source"* ]]; then
@@ -162,6 +230,17 @@ pp() {
         popd > /dev/null
     fi
 }
+
+t() {
+    target=$1
+    pp test "$target"
+}
+
+t2() {
+    target=$1
+    pp --tag=py2 test "$target"
+}
+
 
 # fzf stuff
 export FZF_DEFAULT_OPTS='--height 40% --layout=reverse --border'
@@ -207,7 +286,7 @@ local_airflow() {
 }
 
 build_mlwf() {
-    pp binary airflow/src/python/twitter/airflow/cli
+    pp binary airflow/src/python/twitter/airflow/cli 
 }
 
 function blockers() {
@@ -239,3 +318,5 @@ export PATH="/Users/smcqueen/.pyenv/bin:$PATH"
 eval "$(pyenv init -)"
 eval "$(pyenv virtualenv-init -)"
 
+# pants
+#export PANTS_CONCURRENT=True
